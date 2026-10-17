@@ -344,16 +344,21 @@ def cmd_export(a, st: Store):
 
 def cmd_publish(a, st: Store):
     label = a.year or _current_year()
-    pw = os.environ.get("CCOT_PASSPHRASE") or a.passphrase
+    rota_only = a.view == "rota"
+    env_name = "CCOT_VIEW_PASSPHRASE" if rota_only else "CCOT_PASSPHRASE"
+    what = "ROTA-ONLY dashboard passphrase (the one for the wider group)" if rota_only else "FULL dashboard passphrase (the one shared with consultants)"
+    pw = os.environ.get(env_name) or a.passphrase
     if not pw:
-        pw = getpass.getpass("dashboard passphrase (the one shared with consultants): ")
+        pw = getpass.getpass(what + ": ")
         if pw != getpass.getpass("again: "):
             print("passphrases differ", file=sys.stderr)
             sys.exit(1)
-    out = Path(a.out) if a.out else REPO / "docs" / "rota" / "payload.enc"
+    folder = "rota-view" if rota_only else "rota"
+    out = Path(a.out) if a.out else REPO / "docs" / folder / "payload.enc"
     sw = None if a.no_bump else REPO / "docs" / "sw.js"
-    payload = dashboard.publish(st, label, pw, out, sw)
-    print("wrote %s (%d consultants, %d shifts). Service worker %s." % (out, len(payload["consultants"]), len(payload["rota"]), "left alone" if a.no_bump else "version bumped"))
+    payload = dashboard.publish(st, label, pw, out, sw, view=a.view)
+    print("wrote %s (%s dashboard: %d consultants, %d dates). Service worker %s." % (
+        out, "rota-only" if rota_only else "full", len(payload["consultants"]), len(payload["rota"]), "left alone" if a.no_bump else "version bumped"))
     print("next: commit and push docs/ to publish:\n  git -C \"%s\" add docs && git -C \"%s\" commit -m \"Publish rota %s\" && git -C \"%s\" push" % (REPO, REPO, label, REPO))
 
 
@@ -475,7 +480,9 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("publish", help="build and encrypt the dashboard payload into docs/rota/")
     s.add_argument("--year")
     s.add_argument("--out")
-    s.add_argument("--passphrase", help="(or set CCOT_PASSPHRASE; otherwise you are prompted)")
+    s.add_argument("--passphrase", help="(or set CCOT_PASSPHRASE / CCOT_VIEW_PASSPHRASE; otherwise you are prompted)")
+    s.add_argument("--view", choices=["full", "rota"], default="full",
+                   help="full: everything (docs/rota/); rota: rota and job plan progress only, no money or locum counts (docs/rota-view/)")
     s.add_argument("--no-bump", action="store_true", help="do not change the service worker version")
     s.set_defaults(fn=cmd_publish)
     return p

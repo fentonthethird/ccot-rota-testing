@@ -21,7 +21,7 @@ from . import xlsx_import
 from .store import Store
 
 REPO = Path(__file__).resolve().parents[2]
-PAYLOAD = REPO / "docs" / "rota" / "payload.enc"
+PAYLOADS = [REPO / "docs" / "rota" / "payload.enc", REPO / "docs" / "rota-view" / "payload.enc"]
 SITE = "https://fentonthethird.github.io/ccot-rota-testing/"
 DEFAULT_WORKBOOK = Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/Downloads/Outreach Cons Rota v2.xlsx"
 BASELINE = ".baseline"
@@ -84,24 +84,30 @@ def _links_file(st: Store, wid: str) -> Path:
 
 
 def _unpublish(push: bool) -> None:
-    if not PAYLOAD.exists():
-        print("test dashboard: nothing published")
+    import os
+    present = [p for p in PAYLOADS if p.exists()]
+    if not present:
+        print("test dashboards: nothing published")
         return
-    tracked = subprocess.run(["git", "-C", str(REPO), "ls-files", "--error-unmatch", str(PAYLOAD)], capture_output=True).returncode == 0
+    tracked = []
+    for p in present:
+        if subprocess.run(["git", "-C", str(REPO), "ls-files", "--error-unmatch", str(p)], capture_output=True).returncode == 0:
+            tracked.append(p)
+        else:
+            p.unlink()
     if not tracked:
-        PAYLOAD.unlink()
-        print("test dashboard: removed unpublished local payload")
+        print("test dashboards: removed unpublished local files")
         return
-    subprocess.run(["git", "-C", str(REPO), "rm", "-q", str(PAYLOAD)], check=True)
-    subprocess.run(["git", "-C", str(REPO), "-c", "commit.gpgsign=false", "commit", "-q", "-m", "Reset test dashboard"], check=True)
+    subprocess.run(["git", "-C", str(REPO), "rm", "-q"] + [str(p) for p in tracked], check=True)
+    subprocess.run(["git", "-C", str(REPO), "-c", "commit.gpgsign=false", "commit", "-q", "-m", "Reset test dashboards"], check=True)
     if not push:
-        print("test dashboard: removal committed; run `git push` to take it off the site")
+        print("test dashboards: removal committed; run `git push` to take them off the site")
         return
-    r = subprocess.run(["git", "-C", str(REPO), "push", "-q"], env={**__import__("os").environ, "GIT_TERMINAL_PROMPT": "0"}, capture_output=True, text=True)
+    r = subprocess.run(["git", "-C", str(REPO), "push", "-q"], env={**os.environ, "GIT_TERMINAL_PROMPT": "0"}, capture_output=True, text=True)
     if r.returncode == 0:
-        print("test dashboard: taken down (pushed)")
+        print("test dashboards: taken down (pushed)")
     else:
-        print("test dashboard: removal committed but the push failed; run `git push` yourself\n  " + (r.stderr.strip().splitlines() or [""])[-1])
+        print("test dashboards: removal committed but the push failed; run `git push` yourself\n  " + (r.stderr.strip().splitlines() or [""])[-1])
 
 
 def cmd_setup(a, st: Store) -> None:
@@ -179,7 +185,8 @@ def cmd_status(a, st: Store) -> None:
     print("round %s, window %s (%s to %s), deadline %s, status %s" % (state.get("round"), w["id"], w["start"], w["end"], w.get("deadline") or "none", w.get("status")))
     print("codes received: %d (%s)" % (len(w.get("submissions") or {}), ", ".join(sorted(w.get("submissions") or {})) or "none"))
     print("draft: %s" % ("yes" if w.get("draft") else "no"))
-    print("dashboard published: %s" % ("yes" if PAYLOAD.exists() else "no"))
+    print("full dashboard published: %s" % ("yes" if PAYLOADS[0].exists() else "no"))
+    print("rota-only dashboard published: %s" % ("yes" if PAYLOADS[1].exists() else "no"))
     print("links: %s" % next(iter(sorted(st.root.glob("LINKS - *.txt"))), "missing"))
 
 

@@ -4,6 +4,7 @@ import json
 from urllib.parse import parse_qs, urlparse
 
 import openpyxl
+import pytest
 
 from ccot import allocate, codec, costing, dashboard, importer, xlsx_export, xlsx_import
 from ccot import calendar as cal
@@ -158,3 +159,26 @@ def test_manual_allowance_override_is_respected(store):
     assert W.allowance(store, store.window(w["id"]), R.get(store, "AW")) == {"weekday": 8, "weekend": 1}
     W.set_allowance(store, w["id"], "AW", weekday=99)
     assert W.allowance(store, store.window(w["id"]), R.get(store, "AW"))["weekday"] == 10  # never more than is owed
+
+
+def test_rota_only_dashboard_carries_no_money_locum_or_changes(store, tmp_path):
+    add_people(store, PEOPLE)
+    y = store.year("2026-27")
+    Y.set_shift(y, D("2026-04-07"), "AW", Y.JP, "import")
+    Y.set_shift(y, D("2026-04-08"), "AW", Y.LOCUM, "import", note="cover for XW WLI")
+    Y.set_shift(y, D("2026-04-06"), "XW", Y.BH, "import")
+    y["notes"] = {"2026-04-06": "XW WLI arrangement"}
+    store.save_year(y)
+    Y.swap(store, "2026-27", D("2026-04-07"), "AW", "XW", "private reason")
+    enc = tmp_path / "view.enc"
+    dashboard.publish(store, "2026-27", "wider group", enc, view="rota")
+    plain = json.loads(dashboard.decrypt(json.loads(enc.read_text()), "wider group"))
+    assert set(plain) == {"version", "view", "generated", "year", "year_long", "admin", "consultants", "rota", "unfilled", "decided_through", "bank_holidays"}
+    assert plain["rota"] == {"2026-04-06": "XW", "2026-04-07": "XW", "2026-04-08": "AW"}  # names only, no kinds
+    assert set(plain["consultants"][0]) == {"initials", "name", "quota", "jp"}
+    text = json.dumps(plain).lower()
+    for word in ("locum", "wli", "bill", "budget", "rate", "spend", "summary", "changes", "swap", "reason", "kind", "notes", "email", "lc"):
+        assert '"%s' % word not in text, word
+    assert "private reason" not in text and "arrangement" not in text
+    with pytest.raises(Exception):
+        dashboard.decrypt(json.loads(enc.read_text()), "wrong")

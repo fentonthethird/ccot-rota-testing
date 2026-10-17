@@ -28,6 +28,24 @@ open "$HOME/Documents/CCOT Rota Testing Data"   # the LINKS file is in here; sen
 
 `./testbed status` shows the window name if it has moved on to a later round.
 
+## Two dashboards
+
+| | Address | Shows | Publish with |
+|---|---|---|---|
+| Full | `.../ccot-rota-testing/rota/` | rota with job plan and locum colouring, job plans, locum counts, Summary and WLI money, changes | `./ccot publish` |
+| Rota only | `.../ccot-rota-testing/rota-view/` | rota by month (names only), highlight a name, job plan shifts done against quota | `./ccot publish --view rota` |
+
+Each has its own passphrase and its own encrypted file. The rota-only file is built separately and
+does not contain any money, locum counts, shift types, notes or change log, so its passphrase
+cannot reveal them. Publish both after each change:
+
+```bash
+./ccot publish && ./ccot publish --view rota && git add docs && git commit -m "Publish test rota" && git push
+```
+
+Anyone with the rota-only view can still count a person's days on the calendar, so total shifts
+per person are visible by counting; which of them were paid as locum is not.
+
 Testers who are not consultants can be added to the test roster, then given a link:
 
 ```bash
@@ -45,7 +63,7 @@ Testers who are not consultants can be added to the test roster, then given a li
 ```
 
 `reset` clears every code received, every draft and allocation, and every swap and override, and
-takes the test dashboard down. Testers' marks stay on their phones; they can tap "All unavailable"
+takes both test dashboards down. Testers' marks stay on their phones; they can tap "All unavailable"
 to start again. `new-round` gives a new window name, so old links stop working and phones open
 blank. Add `--keep-site` to leave the test dashboard up, or `--no-push` to commit without pushing.
 

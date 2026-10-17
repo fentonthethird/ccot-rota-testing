@@ -14,7 +14,7 @@ pytestmark = pytest.mark.skipif(not REAL_WORKBOOK.exists(), reason="real workboo
 
 def run(tmp_path, monkeypatch, *args):
     monkeypatch.setenv("CCOT_DATA", str(tmp_path / "data"))
-    monkeypatch.setattr(testbed, "PAYLOAD", tmp_path / "payload.enc")
+    monkeypatch.setattr(testbed, "PAYLOADS", [tmp_path / "payload.enc", tmp_path / "view.enc"])
     testbed.main(list(args))
     return Store(tmp_path / "data")
 

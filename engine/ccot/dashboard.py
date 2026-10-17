@@ -113,6 +113,36 @@ def build_payload(store: Store, label: str) -> Dict[str, Any]:
     }
 
 
+def build_view_payload(store: Store, label: str) -> Dict[str, Any]:
+    """Rota-only dashboard: who is on each day and job plan progress. Deliberately leaves out
+    shift kinds (job plan or locum), locum counts, notes, the change log, and all money."""
+    y = store.year(label)
+    counts = Y.counts(y)
+    ys, ye = cal.year_bounds(label)
+    shifts = y.get("shifts", {})
+    unfilled = y.get("unfilled", [])
+    consultants = []
+    for c in R.consultants(store):
+        ini = c["initials"]
+        qw, qe = R.quota(c, label)
+        k = counts.get(ini, {"jp_weekday": 0, "jp_weekend": 0})
+        if not c.get("active", True) and not k.get("total"):
+            continue
+        consultants.append({"initials": ini, "name": c["name"],
+                            "quota": {"weekday": qw, "weekend": qe},
+                            "jp": {"weekday": min(k["jp_weekday"], qw), "weekend": min(k["jp_weekend"], qe)}})
+    return {
+        "version": 1, "view": "rota", "generated": dt.datetime.now().isoformat(timespec="seconds"),
+        "year": label, "year_long": cal.year_label_long(label),
+        "admin": {"name": store.settings().get("admin", {}).get("name")},
+        "consultants": consultants,
+        "rota": {k: s["c"] for k, s in sorted(shifts.items())},
+        "unfilled": sorted(unfilled),
+        "decided_through": max(list(shifts) + list(unfilled), default=None),
+        "bank_holidays": {d.isoformat(): n for d, n in cal.BANK_HOLIDAYS.items() if ys <= d <= ye},
+    }
+
+
 def derive_key(passphrase: str, salt: bytes, iterations: int = PBKDF2_ITER) -> bytes:
     return hashlib.pbkdf2_hmac("sha256", passphrase.encode("utf-8"), salt, iterations, dklen=32)
 
@@ -131,8 +161,8 @@ def decrypt(envelope: Dict[str, Any], passphrase: str) -> bytes:
     return AESGCM(key).decrypt(base64.b64decode(envelope["iv"]), base64.b64decode(envelope["ct"]), None)
 
 
-def publish(store: Store, label: str, passphrase: str, out: Path, sw_path: Optional[Path] = None) -> Dict[str, Any]:
-    payload = build_payload(store, label)
+def publish(store: Store, label: str, passphrase: str, out: Path, sw_path: Optional[Path] = None, view: str = "full") -> Dict[str, Any]:
+    payload = build_view_payload(store, label) if view == "rota" else build_payload(store, label)
     data = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     env = encrypt(data, passphrase)
     out.parent.mkdir(parents=True, exist_ok=True)
