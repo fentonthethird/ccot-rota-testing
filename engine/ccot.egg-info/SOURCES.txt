@@ -28,5 +28,6 @@ tests/test_calendar.py
 tests/test_codec.py
 tests/test_costing.py
 tests/test_solver.py
+tests/test_testbed.py
 tests/test_workbook_real.py
 tests/test_workflow.py

@@ -1,6 +1,6 @@
 # CCOT rota (TEST copy)
 
-**This is the test copy. See TESTING.md.** The live project is `~/Projects/ccot-rota`.
+**This is the test copy. See TESTING.md.** The live project is `~/Documents/Claude/CCOT Rota App/ccot-rota`.
 
 
 Self-rostering for the Critical Care Outreach Team consultant rota.
@@ -15,7 +15,7 @@ Three separate pieces, on the principle that the hosted site holds code, never d
 2. `engine/` — the allocation engine and admin command line tool. Python, runs only on the
    administrator's machine. Decodes the codes, solves the allocation, exports the workbook and
    builds the encrypted dashboard payload.
-3. Admin data lives outside this repository (default `~/Documents/CCOT Rota Data`), because the
+3. Admin data lives outside this repository (default `~/Documents/Claude/CCOT Rota App/CCOT Rota Data`), because the
    repository is public.
 
 See `docs/README.md` and `engine/README.md` for details.

@@ -6,8 +6,8 @@ folder and its own links. Nothing here touches the live rota.
 | | Test | Live |
 |---|---|---|
 | Website | https://fentonthethird.github.io/ccot-rota-testing/ | https://fentonthethird.github.io/ccot-rota/ |
-| Project folder | `~/Projects/ccot-rota-testing` | `~/Projects/ccot-rota` |
-| Data folder | `~/Documents/CCOT Rota Testing Data` | `~/Documents/CCOT Rota Data` |
+| Project folder | `~/Documents/Claude/ccot-rota-testing` | `~/Documents/Claude/CCOT Rota App/ccot-rota` |
+| Data folder | `~/Documents/Claude/CCOT Rota Testing Data` | `~/Documents/Claude/CCOT Rota App/CCOT Rota Data` |
 | Colour | plum, marked "TEST" | NHS blue |
 
 The test app keeps its own saved marks and offline copy on each phone, so a tester can use both
@@ -16,8 +16,8 @@ sites without one affecting the other.
 ## Running a trial
 
 ```bash
-cd ~/Projects/ccot-rota-testing
-open "$HOME/Documents/CCOT Rota Testing Data"   # the LINKS file is in here; send each tester their own link
+cd ~/Documents/Claude/ccot-rota-testing
+open "$HOME/Documents/Claude/CCOT Rota Testing Data"   # the LINKS file is in here; send each tester their own link
 ./ccot status 2026-27-TRIAL-1                    # who has sent a code
 ./ccot import 2026-27-TRIAL-1                    # paste codes or whole messages, then Ctrl-D
 ./ccot heatmap 2026-27-TRIAL-1 --html            # offers per date
@@ -73,4 +73,4 @@ blank. Add `--keep-site` to leave the test dashboard up, or `--no-push` to commi
 ## Moving changes to the live site
 
 Changes made here are not copied across automatically. When something tested here should go
-live, make the same change in `~/Projects/ccot-rota`.
+live, make the same change in `~/Documents/Claude/CCOT Rota App/ccot-rota`.

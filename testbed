@@ -1,5 +1,5 @@
 #!/bin/sh
 # Set up and reset the TEST site. Always uses the test data folder, never the live one.
 here="$(cd "$(dirname "$0")" && pwd)"
-export CCOT_DATA="${CCOT_TEST_DATA:-$HOME/Documents/CCOT Rota Testing Data}"
+export CCOT_DATA="${CCOT_TEST_DATA:-$HOME/Documents/Claude/CCOT Rota Testing Data}"
 exec "$here/engine/.venv/bin/python" -m ccot.testbed "$@"

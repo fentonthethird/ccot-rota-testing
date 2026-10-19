@@ -61,6 +61,6 @@ def test_setup_refuses_to_overwrite_without_force(tmp_path, monkeypatch):
 
 
 def test_refuses_the_live_folder(monkeypatch):
-    monkeypatch.setenv("CCOT_DATA", str(Path.home() / "Documents" / "CCOT Rota Data"))
+    monkeypatch.setenv("CCOT_DATA", str(Path.home() / "Documents" / "Claude" / "CCOT Rota App" / "CCOT Rota Data"))
     with pytest.raises(SystemExit, match="LIVE"):
         testbed.main(["status"])

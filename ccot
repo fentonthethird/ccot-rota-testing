@@ -7,7 +7,7 @@ if [ ! -x "$py" ]; then
   echo "  python3 -m venv \"$here/engine/.venv\" && \"$here/engine/.venv/bin/pip\" install -e \"$here/engine[test]\"" >&2
   exit 1
 fi
-export CCOT_DATA="${CCOT_TEST_DATA:-$HOME/Documents/CCOT Rota Testing Data}"
+export CCOT_DATA="${CCOT_TEST_DATA:-$HOME/Documents/Claude/CCOT Rota Testing Data}"
 case "$CCOT_DATA" in
   *"/CCOT Rota Data"|*"/CCOT Rota Data/") echo "refusing: that is the LIVE data folder" >&2; exit 1 ;;
 esac

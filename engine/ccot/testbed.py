@@ -30,7 +30,7 @@ KEEP = ("settings.json", "roster.json", "history.json", "years", "windows")
 
 
 def _guard(st: Store) -> None:
-    if st.root.resolve() == (Path.home() / "Documents" / "CCOT Rota Data").resolve():
+    if st.root.resolve() == (Path.home() / "Documents" / "Claude" / "CCOT Rota App" / "CCOT Rota Data").resolve():
         sys.exit("refusing: %s is the LIVE data folder" % st.root)
 
 
